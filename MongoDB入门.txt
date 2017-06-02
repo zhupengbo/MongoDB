@@ -1,0 +1,30 @@
+1、MongoDB概念
+	数据库分为关系型数据库和NoSQL(not only sql)
+	相比关系型数据库有以下优点：
+	1）没有表结构的限制
+	2）可以建立完全索引
+	3）方便冗余和扩展
+
+2、安装配置（ubuntu）
+	1）apt-get install mongodb
+	2）mongo -version
+		root@ubuntu:/home/ubuntu/Mongo/bin# mongo -version
+		MongoDB shell version: 2.4.9
+	3）pgrep mongo -l
+		查看是否启动成功
+	4）启动或停止mongodb服务
+		service mongodb start
+		service mongodb stop
+	5）配置文件路径
+		mkdir /home/ubuntu/Mongo/
+		cd /home/ubuntu/Mongo/
+		mkdir data、bin、log
+		vim conf：	port=1234
+					datapath=data
+					logpath=log/mongo.log
+					fork=true
+	6）启动mongo
+		启动服务
+			mongd --config /home/ubuntu/Mongo/conf
+		启动客户端
+			mongo
