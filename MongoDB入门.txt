@@ -28,3 +28,54 @@
 			mongd --config /home/ubuntu/Mongo/conf
 		启动客户端
 			mongo
+
+3、基础操作（增删改查）
+准备
+> use db1
+switched to db db1
+> show dbs
+admin  (empty)
+db1    0.078GB
+local  0.078GB
+
+	1）增
+> db.tb1.insert({name:'jony',sex:'male',age:19})
+WriteResult({ "nInserted" : 1 })
+> db.tb1.insert({name:'jony',sex:'male',age:19})
+WriteResult({ "nInserted" : 1 })
+> db.tb1.insert({name:'jony',sex:'male',age:19})
+WriteResult({ "nInserted" : 1 })
+
+	2）查
+> db.tb1.find()
+{ "_id" : ObjectId("5932b66134749b947f1747cc"), "name" : "jony", "sex" : "male", "age" : 19 }
+{ "_id" : ObjectId("5932b66a34749b947f1747cd"), "name" : "jony", "sex" : "male", "age" : 19 }
+{ "_id" : ObjectId("5932b66b34749b947f1747ce"), "name" : "jony", "sex" : "male", "age" : 19 }
+	
+	3）改
+I：
+> db.tb1.update({name:'jony'},{sex:'female'})//将name = ‘jony’的性别改为 female ，从结果中可知，只改了一行，
+												并且一行数据中除 sex 属性外，其他属性全部删除
+WriteResult({ "nMatched" : 1, "nUpserted" : 0, "nModified" : 1 })
+> db.tb1.find()
+{ "_id" : ObjectId("5932b66134749b947f1747cc"), "sex" : "female" }
+{ "_id" : ObjectId("5932b66a34749b947f1747cd"), "name" : "jony", "sex" : "male", "age" : 19 }
+{ "_id" : ObjectId("5932b66b34749b947f1747ce"), "name" : "jony", "sex" : "male", "age" : 19 }
+
+II：使用$set:{sex:'female'}只改一个属性
+> db.tb1.update({name:'jony'},{$set:{sex:'female'}})
+WriteResult({ "nMatched" : 1, "nUpserted" : 0, "nModified" : 1 })
+{ "_id" : ObjectId("5932b66b34749b947f1747ce"), "name" : "jony", "sex" : "female", "age" : 19 }
+
+III：当查询行不存在时，执行插入，需要将第三个参数设置true
+
+> db.tb1.update({name:'dany'},{$set:{sex:'female'}},true)
+{ "_id" : ObjectId("5932bcae7ffa0edd0b65f846"), "name" : "dany", "sex" : "female" }
+
+IV：修改多行，将第四个参数设置
+> db.tb1.update({name:'jony'},{$set:{sex:'female'}},true,true)
+WriteResult({ "nMatched" : 3, "nUpserted" : 0, "nModified" : 2 })
+	
+	4）删：默认删除所有的符合条件的行
+> db.tb1.remove({name:'jony'})
+WriteResult({ "nRemoved" : 3 })
