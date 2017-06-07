@@ -30,52 +30,344 @@
 			mongo
 
 3、基础操作（增删改查）
-准备
-> use db1
-switched to db db1
-> show dbs
-admin  (empty)
-db1    0.078GB
-local  0.078GB
 
-	1）增
-> db.tb1.insert({name:'jony',sex:'male',age:19})
-WriteResult({ "nInserted" : 1 })
-> db.tb1.insert({name:'jony',sex:'male',age:19})
-WriteResult({ "nInserted" : 1 })
-> db.tb1.insert({name:'jony',sex:'male',age:19})
-WriteResult({ "nInserted" : 1 })
+	准备
+	> use db1
+	switched to db db1
+	> show dbs
+	admin  (empty)
+	db1    0.078GB
+	local  0.078GB
 
-	2）查
-> db.tb1.find()
-{ "_id" : ObjectId("5932b66134749b947f1747cc"), "name" : "jony", "sex" : "male", "age" : 19 }
-{ "_id" : ObjectId("5932b66a34749b947f1747cd"), "name" : "jony", "sex" : "male", "age" : 19 }
-{ "_id" : ObjectId("5932b66b34749b947f1747ce"), "name" : "jony", "sex" : "male", "age" : 19 }
+		1）增
+	> db.tb1.insert({name:'jony',sex:'male',age:19})
+	WriteResult({ "nInserted" : 1 })
+	> db.tb1.insert({name:'jony',sex:'male',age:19})
+	WriteResult({ "nInserted" : 1 })
+	> db.tb1.insert({name:'jony',sex:'male',age:19})
+	WriteResult({ "nInserted" : 1 })
+
+		2）查
+	> db.tb1.find()
+	{ "_id" : ObjectId("5932b66134749b947f1747cc"), "name" : "jony", "sex" : "male", "age" : 19 }
+	{ "_id" : ObjectId("5932b66a34749b947f1747cd"), "name" : "jony", "sex" : "male", "age" : 19 }
+	{ "_id" : ObjectId("5932b66b34749b947f1747ce"), "name" : "jony", "sex" : "male", "age" : 19 }
+		
+		3）改
+	I：
+	> db.tb1.update({name:'jony'},{sex:'female'})//将name = ‘jony’的性别改为 female ，从结果中可知，只改了一行，
+													并且一行数据中除 sex 属性外，其他属性全部删除
+	WriteResult({ "nMatched" : 1, "nUpserted" : 0, "nModified" : 1 })
+	> db.tb1.find()
+	{ "_id" : ObjectId("5932b66134749b947f1747cc"), "sex" : "female" }
+	{ "_id" : ObjectId("5932b66a34749b947f1747cd"), "name" : "jony", "sex" : "male", "age" : 19 }
+	{ "_id" : ObjectId("5932b66b34749b947f1747ce"), "name" : "jony", "sex" : "male", "age" : 19 }
+
+	II：使用$set:{sex:'female'}只改一个属性
+	> db.tb1.update({name:'jony'},{$set:{sex:'female'}})
+	WriteResult({ "nMatched" : 1, "nUpserted" : 0, "nModified" : 1 })
+	{ "_id" : ObjectId("5932b66b34749b947f1747ce"), "name" : "jony", "sex" : "female", "age" : 19 }
+
+	III：当查询行不存在时，执行插入，需要将第三个参数设置true
+
+	> db.tb1.update({name:'dany'},{$set:{sex:'female'}},true)
+	{ "_id" : ObjectId("5932bcae7ffa0edd0b65f846"), "name" : "dany", "sex" : "female" }
+
+	IV：修改多行，将第四个参数设置
+	> db.tb1.update({name:'jony'},{$set:{sex:'female'}},true,true)
+	WriteResult({ "nMatched" : 3, "nUpserted" : 0, "nModified" : 2 })
+		
+		4）删：默认删除所有的符合条件的行
+	> db.tb1.remove({name:'jony'})
+	WriteResult({ "nRemoved" : 3 })
+
+4、索引类型
 	
-	3）改
-I：
-> db.tb1.update({name:'jony'},{sex:'female'})//将name = ‘jony’的性别改为 female ，从结果中可知，只改了一行，
-												并且一行数据中除 sex 属性外，其他属性全部删除
-WriteResult({ "nMatched" : 1, "nUpserted" : 0, "nModified" : 1 })
-> db.tb1.find()
-{ "_id" : ObjectId("5932b66134749b947f1747cc"), "sex" : "female" }
-{ "_id" : ObjectId("5932b66a34749b947f1747cd"), "name" : "jony", "sex" : "male", "age" : 19 }
-{ "_id" : ObjectId("5932b66b34749b947f1747ce"), "name" : "jony", "sex" : "male", "age" : 19 }
+	1）_id，默认都会又_id索引
+	> db.tb2.getIndexes()
+	[
+		{
+			"v" : 1,
+			"key" : {
+				"_id" : 1
+			},
+			"ns" : "db1.tb2",
+			"name" : "_id_"
+		}
+	]
+	2）单键索引
+	> db.tb2.ensureIndex({x:1})//1代表正向建立索引，0代表负向建立索引
+	> db.tb2.getIndexes()
+	[
+		{
+			"v" : 1,
+			"key" : {
+				"_id" : 1
+			},
+			"ns" : "db1.tb2",
+			"name" : "_id_"
+		},
+		{
+			"v" : 1,
+			"key" : {
+				"x" : 1
+			},
+			"ns" : "db1.tb2",
+			"name" : "x_1"
+		}
+	]
+	3）多键索引
+	与单键索引区别是属性 x 的值类型是单值还是多值
+	> db.tb2.insert({x:1,y:[1,2,3,4,]})
+	> db.tb2.find()
+	{ "_id" : ObjectId("59352318b80ed8520ee301f0"), "x" : 1 }
+	{ "_id" : ObjectId("593524dcb80ed8520ee301f2"), "x" : 1, "y" : [  1,  2,  3,  4 ] }
+	> db.tb2.ensureIndex({y:1})//y为多值属性，索引在y上建立索引就是多键索引
+	> db.tb2.getIndexes()
+	[
+		{
+			"v" : 1,
+			"key" : {
+				"_id" : 1
+			},
+			"ns" : "db1.tb2",
+			"name" : "_id_"
+		},
+		{
+			"v" : 1,
+			"key" : {
+				"x" : 1
+			},
+			"ns" : "db1.tb2",
+			"name" : "x_1"
+		},
+		{
+			"v" : 1,
+			"key" : {
+				"y" : 1
+			},
+			"ns" : "db1.tb2",
+			"name" : "y_1"
+		}
+	]
+	4）复合索引
+	对超过一个属性建立联合索引
+	>db.tb2.ensureIndex({x:1,y:1})
+	>db.tb2.getIndexes()
+	{
+		"v" : 1,
+		"key" : {
+			"x" : 1,
+			"y" : 1
+		},
+		"ns" : "db1.tb2",
+		"name" : "x_1_y_1"
+	}
+	5）过期索引
+	> db.tb3.ensureIndex({time:1},{expireAfterSeconds:10})
+	> db.tb3.getIndexes()
+	[
+		{
+			"v" : 1,
+			"key" : {
+				"_id" : 1
+			},
+			"ns" : "db1.tb3",
+			"name" : "_id_"
+		},
+		{
+			"v" : 1,
+			"key" : {
+				"time" : 1
+			},
+			"ns" : "db1.tb3",
+			"name" : "time_1",
+			"expireAfterSeconds" : 10
+		}
+	]
+	> db.tb3.insert({time:new Date()})
+	> db.tb3.find()
+	{ "_id" : ObjectId("59353d492e9c4bc64016404c"), "time" : ISODate("2017-06-05T11:15:21.533Z") }
+	> db.tb3.find()//等待60s
+	> //没有查找到任何记录，记录已经被删除
 
-II：使用$set:{sex:'female'}只改一个属性
-> db.tb1.update({name:'jony'},{$set:{sex:'female'}})
-WriteResult({ "nMatched" : 1, "nUpserted" : 0, "nModified" : 1 })
-{ "_id" : ObjectId("5932b66b34749b947f1747ce"), "name" : "jony", "sex" : "female", "age" : 19 }
-
-III：当查询行不存在时，执行插入，需要将第三个参数设置true
-
-> db.tb1.update({name:'dany'},{$set:{sex:'female'}},true)
-{ "_id" : ObjectId("5932bcae7ffa0edd0b65f846"), "name" : "dany", "sex" : "female" }
-
-IV：修改多行，将第四个参数设置
-> db.tb1.update({name:'jony'},{$set:{sex:'female'}},true,true)
-WriteResult({ "nMatched" : 3, "nUpserted" : 0, "nModified" : 2 })
+	6）全文索引
+	默认textIndex 是关闭的，需要在配置文件中设置打开
+	关闭service mongod： ps -ef|grep mongodb;
+	kill pid;
+	在conf文件中添加：setParameter=textSearchEnabled=true
+	重启mongod：mongod --conf conf	
+	启动mongo：mongo 127.0.0.1：1234
 	
-	4）删：默认删除所有的符合条件的行
-> db.tb1.remove({name:'jony'})
-WriteResult({ "nRemoved" : 3 })
+	创建全文索引：
+	> db.tb1.ensureIndex({article:"text"})
+	> db.tb1.getIndexes()
+	{
+		"v" : 1,
+		"key" : {
+			"_fts" : "text",
+			"_ftsx" : 1
+		},
+		"ns" : "db1.tb1",
+		"name" : "article_text",
+		"weights" : {
+			"article" : 1
+		},
+		"default_language" : "english",
+		"language_override" : "language",
+		"textIndexVersion" : 1
+	}
+	使用全文索引查询：
+	> db.tb1.find({$text:{$search:"aa bb"}})
+	error: { "$err" : "invalid operator: $search", "code" : 10068 }
+	原因：mongo 版本问题，在2.4下使用
+	> db.tb1.runCommand("text",{search: "aa bb"})//搜索包含 aa || bb
+	> db.tb1.runCommand("text",{search: "aa -bb"})//搜索包含aa && 不包含bb
+	> db.tb1.runCommand("text",{search: "\"aa\" \"dd\""})//搜索包含aa并且包含dd
+	使用评分：
+	> db.tb1.runCommand("text",{search: "aa bb cc"},{$meta:"textscore"})
+	
+5、索引属性
+	1）name
+	> db.tb2.ensureIndex({x:1},{name:"x_index"});
+	> db.tb2.getIndexes()
+	[
+		{
+			"v" : 1,
+			"key" : {
+				"_id" : 1
+			},
+			"ns" : "db1.tb2",
+			"name" : "_id_"
+		},
+		{
+			"v" : 1,
+			"key" : {
+				"x" : 1
+			},
+			"ns" : "db1.tb2",
+			"name" : "x_index"//不使用默认索引名，自定义索引名
+		}
+	]
+	
+	2）唯一性
+	> db.tb2.ensureIndex({y:1},{unique:true})//设置 属性 y 唯一索引
+	> db.tb2.insert({y:1})
+	> db.tb2.insert({y:1})
+		E11000 duplicate key error index: db1.tb2.$y_1  dup key: { : 1.0 }
+	
+	3）稀疏性：默认false，设置true时，没有值的属性上的索引失效
+	> db.tb2.ensureIndex({z:1},{sparse:true})//设置索引z_1打开稀疏性，则z中没有数据时，该索引将无效
+	> db.tb2.find()
+	{ "_id" : ObjectId("5936973740d353149f05d899"), "y" : 1 }//属性 z 没有数据
+	> db.tb2.find({y:1}).hint("z_1")						//hint，强制使用z_1索引
+	> db.tb2.find({y:1})									//不适用“z_1”索引
+	{ "_id" : ObjectId("5936973740d353149f05d899"), "y" : 1 }
+	
+	> db.tb2.find()
+	{ "_id" : ObjectId("5936973740d353149f05d899"), "y" : 1 }	//#1
+	{ "_id" : ObjectId("593698fd40d353149f05d89d"), "z" : 1 }	//#2
+	{ "_id" : ObjectId("5936993040d353149f05d89f"), "y" : 2, "z" : 1 }	//#3
+	> db.tb2.find({z:1}).hint("z_1")	//属性 z 上存在数据的 #2 #3
+	{ "_id" : ObjectId("593698fd40d353149f05d89d"), "z" : 1 }	
+	{ "_id" : ObjectId("5936993040d353149f05d89f"), "y" : 2, "z" : 1 }
+	> db.tb2.find({y:1}).hint("z_1")	//y=1 的记录 属性 z 没有数据，索引该条记录没有在索引上
+	> db.tb2.find({y:2}).hint("z_1")	//一条记录
+	{ "_id" : ObjectId("5936993040d353149f05d89f"), "y" : 2, "z" : 1 }
+	
+	4）过期性
+	> db.tb2.ensureIndex({m:1},{expireAfterSeconds:5})
+	> db.tb2.insert({m:new Date()})//刷新频率时60s，不保证精确 5s 后删除
+
+6、地理位置索引
+
+	1）2d索引
+	建立索引：
+	> db.tb2.ensureIndex(m:"2d")
+	插入数据：
+	> db.tb2.insert({m:[1,1]}) //经纬度[x,y] 其中 -180<=x<=180 , 0<=y<=90
+	查找数据：
+	
+		I) $near	直线
+			> db.tb2.find({m:{$near:[0,0],$maxDistance:2}})	//$near 只支持maxDistance，不支持minDistance
+			{ "_id" : ObjectId("59369be940d353149f05d8a5"), "m" : [  1,  1 ] }
+		II)$geoWithin	范围
+			> db.tb2.find({m:{$geoWithin:{$box:[[0,0],[2,2]]}}})	//矩形
+			{ "_id" : ObjectId("59369be940d353149f05d8a5"), "m" : [  1,  1 ] }
+			{ "_id" : ObjectId("59369bec40d353149f05d8a6"), "m" : [  2,  2 ] }
+			> db.tb2.find({m:{$geoWithin:{$center:[[0,0],2]}}})		//圆
+			{ "_id" : ObjectId("59369be940d353149f05d8a5"), "m" : [  1,  1 ] }
+			> db.tb2.find({m:{$geoWithin:{$polygon:[[0,0],[1,1],[3,4],[0,4]]}}})	//多边形
+			{ "_id" : ObjectId("59369be940d353149f05d8a5"), "m" : [  1,  1 ] }
+			{ "_id" : ObjectId("59369bf140d353149f05d8a7"), "m" : [  3,  4 ] }
+					
+	2）2dsphere（球面）索引
+
+7、索引分析
+	1）mongostat -h ip:port
+	root@ubuntu:/home/ubuntu# mongostat -h 127.0.0.1:1234
+	connected to: 127.0.0.1:1234
+	insert  query update delete getmore command flushes mapped  vsize    res faults  locked db idx miss %     qr|qw   ar|aw  netIn netOut  conn       time 
+		*0     *0     *0     *0       0     1|0       0   160m   544m    45m      0 local:0.0%          0       0|0     0|0    62b     2k     2   04:35:34 
+		*0     *0     *0     *0       0     1|0       0   160m   544m    45m      0 local:0.0%          0       0|0     0|0    62b     2k     2   04:35:35
+		。。。。
+	
+	2）profile
+	> db.getProfilingStatus()//三种状态0，1，2；0表示不记录，1只记录重要的，2全部记录；默认0
+	{ "was" : 0, "slowms" : 100 }
+	> db.setProfilingLevel(2)//设置2
+	{ "was" : 0, "slowms" : 100, "ok" : 1 }
+	> db.system.profile.find().sort({$nature:-1}).limit(2)//查询，取逆序前2条
+	3）日志
+	
+	4）explain
+	> db.tb3.find({x:1000}).explain()
+	{
+		"cursor" : "BasicCursor",	//没有使用索引
+		"isMultiKey" : false,
+		"n" : 1,
+		"nscannedObjects" : 100000,
+		"nscanned" : 100000,
+		"nscannedObjectsAllPlans" : 100000,
+		"nscannedAllPlans" : 100000,
+		"scanAndOrder" : false,
+		"indexOnly" : false,
+		"nYields" : 0,
+		"nChunkSkips" : 0,
+		"millis" : 30,			//花费时间30ms
+		"indexBounds" : {
+			
+		},
+		"server" : "ubuntu:1234"
+	}
+	> db.tb3.ensureIndex({x:1})//添加索引
+	> db.tb3.find({x:1000}).explain()
+	{
+		"cursor" : "BtreeCursor x_1",		//使用了索引
+		"isMultiKey" : false,
+		"n" : 1,
+		"nscannedObjects" : 1,
+		"nscanned" : 1,
+		"nscannedObjectsAllPlans" : 1,
+		"nscannedAllPlans" : 1,
+		"scanAndOrder" : false,
+		"indexOnly" : false,
+		"nYields" : 0,
+		"nChunkSkips" : 0,
+		"millis" : 0,		//花费时间0ms
+		"indexBounds" : {
+			"x" : [
+				[
+					1000,
+					1000
+				]
+			]
+		},
+		"server" : "ubuntu:1234"
+	}
+
+8、创建用户
+	
+		
+
+
