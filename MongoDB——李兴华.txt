@@ -1,0 +1,294 @@
+MongoDB系统学习
+一、基本使用：
+I、查询
+	0、数据准备：
+		db.tb4.insert({"name":"jim","sex":"male","age":50,"addr":"town"})
+		db.tb4.insert({"name":"james","sex":"male","age":23,"addr":"town"})
+		db.tb4.insert({"name":"angile","sex":"female","age":19,"addr":"town"})
+		db.tb4.insert({"name":"juliya","sex":"female","age":26,"addr":"city"})
+		db.tb4.insert({"name":"barbe","sex":"male","age":29,"addr":"city"})
+		db.tb4.insert({"name":"jey","sex":"male","age":18,"addr":"town"})
+	1、关系查询：
+		1）大于（$gt）
+			示例：查找age大于25的
+			> db.tb4.find({"age":{$gt:25}}).pretty()
+			{
+				"_id" : ObjectId("5940fb8da1bdd3a58e7217e5"),
+				"name" : "jim",
+				"sex" : "male",
+				"age" : 50,
+				"addr" : "town"
+			}
+			{
+				"_id" : ObjectId("5940fc1ea1bdd3a58e7217e8"),
+				"name" : "juliya",
+				"sex" : "female",
+				"age" : 26,
+				"addr" : "city"
+			}
+			{
+				"_id" : ObjectId("5940fc1ea1bdd3a58e7217e9"),
+				"name" : "barbe",
+				"sex" : "male",
+				"age" : 29,
+				"addr" : "city"
+			}
+			
+		2）小于（$lt）类似大于
+		3）等于（$eq）或者{"xx":"xxxx"}
+			示例：查找age等于50
+			db.tb4.find({"age":50}).pretty()
+			> db.tb4.find({"age":50}).pretty()
+			{
+				"_id" : ObjectId("5940fb8da1bdd3a58e7217e5"),
+				"name" : "jim",
+				"sex" : "male",
+				"age" : 50,
+				"addr" : "town"
+			}
+
+			或者 
+			db.tb4.find({"age":{$eq:50}}).pretty():error: { "$err" : "invalid operator: $eq", "code" : 10068 }
+
+		4）大于等于（$gte）
+		5）小于等于（$lte）
+		6）不等于（$neq）
+	
+	2、逻辑查询
+		1）$and
+		示例：查找年龄小于25并且性别位male
+		解法1：
+		> db.tb4.find({"age":{$lt:25},"sex":"male"}).pretty()//逗号表示and关系
+		{
+			"_id" : ObjectId("5940fc1ea1bdd3a58e7217e6"),
+			"name" : "james",
+			"sex" : "male",
+			"age" : 23,
+			"addr" : "town"
+		}
+		{
+			"_id" : ObjectId("5940fc26a1bdd3a58e7217ea"),
+			"name" : "jey",
+			"sex" : "male",
+			"age" : 18,
+			"addr" : "town"
+		}
+		解法2：
+		> db.tb4.find({$and:[{"age":{$lt:25}},{"sex":"male"}]}).pretty()
+		{
+			"_id" : ObjectId("5940fc1ea1bdd3a58e7217e6"),
+			"name" : "james",
+			"sex" : "male",
+			"age" : 23,
+			"addr" : "town"
+		}
+		{
+			"_id" : ObjectId("5940fc26a1bdd3a58e7217ea"),
+			"name" : "jey",
+			"sex" : "male",
+			"age" : 18,
+			"addr" : "town"
+		}
+
+		2）$or
+		示例：查找age小于19或者大于30
+		> db.tb4.find({$or:[{"age":{$lt:19}},{"age":{$gt:30}}]}).pretty()
+		{
+			"_id" : ObjectId("5940fb8da1bdd3a58e7217e5"),
+			"name" : "jim",
+			"sex" : "male",
+			"age" : 50,
+			"addr" : "town"
+		}
+		{
+			"_id" : ObjectId("5940fc26a1bdd3a58e7217ea"),
+			"name" : "jey",
+			"sex" : "male",
+			"age" : 18,
+			"addr" : "town"
+		}
+
+		3）$not
+		示例：查找age不大于25
+		> db.tb4.find({"age":{$not:{$gte:25}}}).pretty()
+		{
+			"_id" : ObjectId("5940fc1ea1bdd3a58e7217e6"),
+			"name" : "james",
+			"sex" : "male",
+			"age" : 23,
+			"addr" : "town"
+		}
+		{
+			"_id" : ObjectId("5940fc1ea1bdd3a58e7217e7"),
+			"name" : "angile",
+			"sex" : "female",
+			"age" : 19,
+			"addr" : "town"
+		}
+		{
+			"_id" : ObjectId("5940fc26a1bdd3a58e7217ea"),
+			"name" : "jey",
+			"sex" : "male",
+			"age" : 18,
+			"addr" : "town"
+		}
+		4）$nor，not or
+		示例：查找不满足（age小于19或者大于30）
+		> db.tb4.find({$nor:[{"age":{$lt:19}},{"age":{$gt:30}}]}).pretty()//即就是查找19=<age<=30
+		{
+			"_id" : ObjectId("5940fc1ea1bdd3a58e7217e6"),
+			"name" : "james",
+			"sex" : "male",
+			"age" : 23,
+			"addr" : "town"
+		}
+		{
+			"_id" : ObjectId("5940fc1ea1bdd3a58e7217e7"),
+			"name" : "angile",
+			"sex" : "female",
+			"age" : 19,
+			"addr" : "town"
+		}
+		{
+			"_id" : ObjectId("5940fc1ea1bdd3a58e7217e8"),
+			"name" : "juliya",
+			"sex" : "female",
+			"age" : 26,
+			"addr" : "city"
+		}
+		{
+			"_id" : ObjectId("5940fc1ea1bdd3a58e7217e9"),
+			"name" : "barbe",
+			"sex" : "male",
+			"age" : 29,
+			"addr" : "city"
+		}
+
+	3、取模
+		$mod:[n1,n2];//n1表示底，n2表示余数
+		示例：查找age%18==1
+		> db.tb4.find({"age":{$mod:[18,1]}}).pretty()
+		{
+			"_id" : ObjectId("5940fc1ea1bdd3a58e7217e7"),
+			"name" : "angile",
+			"sex" : "female",
+			"age" : 19,
+			"addr" : "town"
+		}
+
+	4、范围
+		1）$in
+		查找age是18，19，23的
+		> db.tb4.find({age:{$in:[18,19,25]}}).pretty()
+		{
+			"_id" : ObjectId("5940fc1ea1bdd3a58e7217e7"),
+			"name" : "angile",
+			"sex" : "female",
+			"age" : 19,
+			"addr" : "town"
+		}
+		{
+			"_id" : ObjectId("5940fc26a1bdd3a58e7217ea"),
+			"name" : "jey",
+			"sex" : "male",
+			"age" : 18,
+			"addr" : "town"
+		}
+		2）$nin
+		> db.tb4.find({age:{$nin:[18,19,25]}}).pretty()
+		{
+			"_id" : ObjectId("5940fb8da1bdd3a58e7217e5"),
+			"name" : "jim",
+			"sex" : "male",
+			"age" : 50,
+			"addr" : "town"
+		}
+		{
+			"_id" : ObjectId("5940fc1ea1bdd3a58e7217e6"),
+			"name" : "james",
+			"sex" : "male",
+			"age" : 23,
+			"addr" : "town"
+		}
+		{
+			"_id" : ObjectId("5940fc1ea1bdd3a58e7217e8"),
+			"name" : "juliya",
+			"sex" : "female",
+			"age" : 26,
+			"addr" : "city"
+		}
+		{
+			"_id" : ObjectId("5940fc1ea1bdd3a58e7217e9"),
+			"name" : "barbe",
+			"sex" : "male",
+			"age" : 29,
+			"addr" : "city"
+		}
+
+	5、数组
+		1）$all
+		
+		2）$size
+		3）$slice
+		
+	6、嵌套查询  ( $elemMatch )  
+		数据准备：
+		db.tb5.insert({name:"jeo",parent:[{father:{name:"old jeo",age:50}},{mother:{name:"wife jeo",age:43}}]})
+		db.tb5.insert({name:"jams",parent:[{father:{name:"jim",age:50}},{mother:{name:"bollin",age:45}}]})
+		db.tb5.insert({name:"barbe",parent:[{father:{name:"tang",age:45}},{mother:{name:"jeny",age:30}}]})
+		db.tb5.insert({name:"noria",parent:[{father:{name:"danny",age:43}},{mother:{name:"lower",age:42}}]})
+		db.tb5.insert({name:"diff"})
+		
+		示例：查找母亲name=“lower”并且age小于40岁
+		> db.tb5.find({"parent":{$elemMatch:{"mother":{name:"lower","age":42}}}}).pretty()
+		{
+			"_id" : ObjectId("59426cd0459173ea8aa4961c"),
+			"name" : "noria",
+			"parent" : [
+				{
+					"father" : {
+						"name" : "danny",
+						"age" : 43
+					}
+				},
+				{
+					"mother" : {
+						"name" : "lower",
+						"age" : 42
+					}
+				}
+			]
+		}
+	7、字段判断 （$exists）
+		示例：查找不存在字段parent的记录
+		> db.tb5.find({parent:{$exists:false}}).pretty()
+			{ "_id" : ObjectId("594272b4459173ea8aa4961d"), "name" : "diff" }
+			
+	8、条件查询  （$where）
+	一定要避免使用”$where”查询，因为效率太低
+	9、正则查询 （$regex）
+		{key:正则/i|m}
+		{key:{$regex:正则,$options:"i/s/m/x"}}
+		示例：查找name中含有am
+		> db.tb5.find({"name":/am/}).pretty()	等价于	db.tb5.find({name:{$regex:/am/}}).pretty()
+			等价于		db.tb5.find({name:{$regex:/Am/i}}).pretty()
+		{
+			"_id" : ObjectId("59426ccd459173ea8aa4961a"),
+			"name" : "jams",
+			"parent" : [
+				{
+					"father" : {
+						"name" : "jim",
+						"age" : 50
+					}
+				},
+				{
+					"mother" : {
+						"name" : "bollin",
+						"age" : 45
+					}
+				}
+			]
+		}
+
+	
