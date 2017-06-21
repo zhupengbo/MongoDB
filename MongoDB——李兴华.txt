@@ -290,5 +290,78 @@ I、查询
 				}
 			]
 		}
+	10、排序查询（sort）
+		1）升序查询（按照age升序）
+		> db.tb4.find().sort({"age":1})
+		{ "_id" : ObjectId("5940fc26a1bdd3a58e7217ea"), "name" : "jey", "sex" : "male", "age" : 18, "addr" : "town" }
+		{ "_id" : ObjectId("5940fc1ea1bdd3a58e7217e7"), "name" : "angile", "sex" : "female", "age" : 19, "addr" : "town" }
+		{ "_id" : ObjectId("5940fc1ea1bdd3a58e7217e6"), "name" : "james", "sex" : "male", "age" : 23, "addr" : "town" }
+		{ "_id" : ObjectId("5940fc1ea1bdd3a58e7217e8"), "name" : "juliya", "sex" : "female", "age" : 26, "addr" : "city" }
+		{ "_id" : ObjectId("5940fc1ea1bdd3a58e7217e9"), "name" : "barbe", "sex" : "male", "age" : 29, "addr" : "city" }
+		{ "_id" : ObjectId("5940fb8da1bdd3a58e7217e5"), "name" : "jim", "sex" : "male", "age" : 50, "addr" : "town" }
+		
+		2）降序查询（按照age降序）
+		> db.tb4.find().sort({"age":-1})
+		{ "_id" : ObjectId("5940fb8da1bdd3a58e7217e5"), "name" : "jim", "sex" : "male", "age" : 50, "addr" : "town" }
+		{ "_id" : ObjectId("5940fc1ea1bdd3a58e7217e9"), "name" : "barbe", "sex" : "male", "age" : 29, "addr" : "city" }
+		{ "_id" : ObjectId("5940fc1ea1bdd3a58e7217e8"), "name" : "juliya", "sex" : "female", "age" : 26, "addr" : "city" }
+		{ "_id" : ObjectId("5940fc1ea1bdd3a58e7217e6"), "name" : "james", "sex" : "male", "age" : 23, "addr" : "town" }
+		{ "_id" : ObjectId("5940fc1ea1bdd3a58e7217e7"), "name" : "angile", "sex" : "female", "age" : 19, "addr" : "town" }
+		{ "_id" : ObjectId("5940fc26a1bdd3a58e7217ea"), "name" : "jey", "sex" : "male", "age" : 18, "addr" : "town" }
+		3）自然排序（插入顺序（1：插入正序；-1插入负序））
+		> db.tb4.find().sort({$natural:1})
+		> db.tb4.find().sort({$natural:-1})
+	11、分页查询（skip、limit）
+		对比10-1）跳过两个，选择2个
+		> db.tb4.find().sort({"age":1}).skip(2).limit(2)
+		{ "_id" : ObjectId("5940fc1ea1bdd3a58e7217e6"), "name" : "james", "sex" : "male", "age" : 23, "addr" : "town" }
+		{ "_id" : ObjectId("5940fc1ea1bdd3a58e7217e8"), "name" : "juliya", "sex" : "female", "age" : 26, "addr" : "city" }
+
+		
+II、数据更新（update、save）
+	update({修改条件},{新对象(需要插入函数：$set)},upsert,multi)
+	1、将age为50的记录sex改为female：
+	
+		> db.tb4.update({"age":50},{$set:{"sex":"female"}},false,false)
+		> db.tb4.find().sort({"age":1})
+		{ "_id" : ObjectId("5940fc26a1bdd3a58e7217ea"), "name" : "jey", "sex" : "male", "age" : 18, "addr" : "town" }
+		{ "_id" : ObjectId("5940fc1ea1bdd3a58e7217e7"), "name" : "angile", "sex" : "female", "age" : 19, "addr" : "town" }
+		{ "_id" : ObjectId("5940fc1ea1bdd3a58e7217e6"), "name" : "james", "sex" : "male", "age" : 23, "addr" : "town" }
+		{ "_id" : ObjectId("5940fc1ea1bdd3a58e7217e8"), "name" : "juliya", "sex" : "female", "age" : 26, "addr" : "city" }
+		{ "_id" : ObjectId("5940fc1ea1bdd3a58e7217e9"), "name" : "barbe", "sex" : "male", "age" : 29, "addr" : "city" }
+		{ "_id" : ObjectId("5940fb8da1bdd3a58e7217e5"), "addr" : "town", "age" : 50, "name" : "jim", "sex" : "female" }
+	
+	2、将age为51的记录sex修改为female；原记录没有age=51的记录，设置没有就插入，即将upsert设置true
+		> db.tb4.update({"age":51},{$set:{"sex":"female"}},true,false)
+		> db.tb4.find().sort({"age":1})
+		{ "_id" : ObjectId("5940fc26a1bdd3a58e7217ea"), "name" : "jey", "sex" : "male", "age" : 18, "addr" : "town" }
+		{ "_id" : ObjectId("5940fc1ea1bdd3a58e7217e7"), "name" : "angile", "sex" : "female", "age" : 19, "addr" : "town" }
+		{ "_id" : ObjectId("5940fc1ea1bdd3a58e7217e6"), "name" : "james", "sex" : "male", "age" : 23, "addr" : "town" }
+		{ "_id" : ObjectId("5940fc1ea1bdd3a58e7217e8"), "name" : "juliya", "sex" : "female", "age" : 26, "addr" : "city" }
+		{ "_id" : ObjectId("5940fc1ea1bdd3a58e7217e9"), "name" : "barbe", "sex" : "male", "age" : 29, "addr" : "city" }
+		{ "_id" : ObjectId("5940fb8da1bdd3a58e7217e5"), "addr" : "town", "age" : 50, "name" : "jim", "sex" : "female" }
+		{ "_id" : ObjectId("594a352fb0b204ebce1314b2"), "age" : 51, "sex" : "female" }
+	
+	3、将sex为female的所有记录的age改为0
+		> db.tb4.update({"sex":"female"},{$set:{"age":0}},false,false)
+		> db.tb4.find().sort({"age":1})
+		{ "_id" : ObjectId("5940fb8da1bdd3a58e7217e5"), "addr" : "town", "age" : 0, "name" : "jim", "sex" : "female" }
+		{ "_id" : ObjectId("5940fc26a1bdd3a58e7217ea"), "name" : "jey", "sex" : "male", "age" : 18, "addr" : "town" }
+		{ "_id" : ObjectId("5940fc1ea1bdd3a58e7217e7"), "name" : "angile", "sex" : "female", "age" : 19, "addr" : "town" }
+		{ "_id" : ObjectId("5940fc1ea1bdd3a58e7217e6"), "name" : "james", "sex" : "male", "age" : 23, "addr" : "town" }
+		{ "_id" : ObjectId("5940fc1ea1bdd3a58e7217e8"), "name" : "juliya", "sex" : "female", "age" : 26, "addr" : "city" }
+		{ "_id" : ObjectId("5940fc1ea1bdd3a58e7217e9"), "name" : "barbe", "sex" : "male", "age" : 29, "addr" : "city" }
+		{ "_id" : ObjectId("594a352fb0b204ebce1314b2"), "age" : 51, "sex" : "female" }
+		可以看到指影响到了一行数据，跟预想不一致，并没有修改所有记录
+		解释：multi默认false时，update只会影响找到的第一条数据，将其设置为true，则update所有复合条件的记录
+		> db.tb4.update({"sex":"female"},{$set:{"age":0}},false,true)
+		> db.tb4.find().sort({"age":1})
+		{ "_id" : ObjectId("5940fb8da1bdd3a58e7217e5"), "addr" : "town", "age" : 0, "name" : "jim", "sex" : "female" }
+		{ "_id" : ObjectId("5940fc1ea1bdd3a58e7217e7"), "name" : "angile", "sex" : "female", "age" : 0, "addr" : "town" }
+		{ "_id" : ObjectId("5940fc1ea1bdd3a58e7217e8"), "name" : "juliya", "sex" : "female", "age" : 0, "addr" : "city" }
+		{ "_id" : ObjectId("594a352fb0b204ebce1314b2"), "age" : 0, "sex" : "female" }
+		{ "_id" : ObjectId("5940fc26a1bdd3a58e7217ea"), "name" : "jey", "sex" : "male", "age" : 18, "addr" : "town" }
+		{ "_id" : ObjectId("5940fc1ea1bdd3a58e7217e6"), "name" : "james", "sex" : "male", "age" : 23, "addr" : "town" }
+		{ "_id" : ObjectId("5940fc1ea1bdd3a58e7217e9"), "name" : "barbe", "sex" : "male", "age" : 29, "addr" : "city" }
 
 	
