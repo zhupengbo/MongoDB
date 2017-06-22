@@ -364,4 +364,76 @@ II、数据更新（update、save）
 		{ "_id" : ObjectId("5940fc1ea1bdd3a58e7217e6"), "name" : "james", "sex" : "male", "age" : 23, "addr" : "town" }
 		{ "_id" : ObjectId("5940fc1ea1bdd3a58e7217e9"), "name" : "barbe", "sex" : "male", "age" : 29, "addr" : "city" }
 
+III、修改器（10种）
+	0、数据准备：
+		db.tb6.insert({"name":"jim","sex":"male","age":50,"addr":"town"})
+		db.tb6.insert({"name":"james","sex":"male","age":23,"addr":"town"})
+		db.tb6.insert({"name":"angile","sex":"female","age":19,"addr":"town"})
+		db.tb6.insert({"name":"juliya","sex":"female","age":26,"addr":"city"})
+		db.tb6.insert({"name":"barbe","sex":"male","age":29,"addr":"city"})
+		db.tb6.insert({"name":"jey","sex":"male","age":18,"addr":"town"})
+	1、$inc
+		示例：将age全部减去2
+		> db.tb6.update({},{$inc:{"age":-2}},false,true)
+		> db.tb6.find()
+		{ "_id" : ObjectId("594b8acfa4f70bbe7d6558da"), "name" : "james", "sex" : "male", "age" : 21, "addr" : "town" }
+		{ "_id" : ObjectId("594b8acfa4f70bbe7d6558db"), "name" : "angile", "sex" : "female", "age" : 17, "addr" : "town" }
+		{ "_id" : ObjectId("594b8acfa4f70bbe7d6558dc"), "name" : "juliya", "sex" : "female", "age" : 24, "addr" : "city" }
+		{ "_id" : ObjectId("594b8acfa4f70bbe7d6558dd"), "name" : "barbe", "sex" : "male", "age" : 27, "addr" : "city" }
+		{ "_id" : ObjectId("594b8ae1a4f70bbe7d6558de"), "name" : "jey", "sex" : "male", "age" : 16, "addr" : "town" }
+	2、$set
+	3、$unset
+		示例：将age=16的记录种sex字段删除
+		> db.tb6.update({"age":16},{$unset:{"sex":1}})
+		> db.tb6.find({"age":16})
+		{ "_id" : ObjectId("594b8ae1a4f70bbe7d6558de"), "addr" : "town", "age" : 16, "name" : "jey" }
+
+	4、$push：只能应用于数组字段
+		插入一条数据如下：
+		{ "_id" : ObjectId("594b8dfea4f70bbe7d6558e0"), "name" : "tedy", "sex" : "male", "addr" : [  "town" ] }
+		示例：将name="tedy"的记录addr添加一个地址：“city”
+		> db.tb6.update({"name":"tedy"},{$push:{"addr":"city"}})
+		> db.tb6.find({"name":"tedy"})
+		{ "_id" : ObjectId("594b8dfea4f70bbe7d6558e0"), "addr" : [  "town",  "city" ], "name" : "tedy", "sex" : "male" }
+		
+	5、$pushAll：只能用于数组
+		示例：将name=tedy的记录的地址添加“county”，“sea”
+		> db.tb6.update({"name":"tedy"},{$pushAll:{"addr":["county","sea"]}})
+		> db.tb6.find({"name":"tedy"})
+		{ "_id" : ObjectId("594b8dfea4f70bbe7d6558e0"), "addr" : [  "town",  "city",  "county",  "sea" ], "name" : "tedy", "sex" : "male" }
+
+	6、$addToSet：set属性，只能添加不存在的数据
+		示例：将name=tedy的记录的地址添加“city”，因为“city”已经存在，所以不会在添加，而$push和$pushAll就不会检测是否已存在
+		> db.tb6.update({"name":"tedy"},{$addToSet:{"addr":"city"}})
+		> db.tb6.find({"name":"tedy"})
+		{ "_id" : ObjectId("594b8dfea4f70bbe7d6558e0"), "addr" : [  "town",  "city",  "county",  "sea" ], "name" : "tedy", "sex" : "male" }
+		//可以看到并没有变化
+		
+	7、$pop
+		语法：{$pop:{"字段":value}}//value=1/-1
+		示例：将name=tedy记录的addr字段最后一个值"sea"删除
+		> db.tb6.update({"name":"tedy"},{$pop:{"addr":1}})	//当value取值为-1时，删除第一个即town
+		> db.tb6.find({"name":"tedy"})
+		{ "_id" : ObjectId("594b8dfea4f70bbe7d6558e0"), "addr" : [  "town",  "city",  "county" ], "name" : "tedy", "sex" : "male" }
+
+	8、$pull
+		语法：{$pull:{"字段":数据}}
+		示例：将name=tedy记录的addr删除city
+		> db.tb6.update({"name":"tedy"},{$pull:{"addr":"city"}})
+		> db.tb6.find({"name":"tedy"})
+		{ "_id" : ObjectId("594b8dfea4f70bbe7d6558e0"), "addr" : [  "town",  "county" ], "name" : "tedy", "sex" : "male" }
+
+	9、$pullAll
+		示例：将name=tedy记录的addr删除town和county
+		> db.tb6.update({"name":"tedy"},{$pullAll:{"addr":["town","county"]}})
+		> db.tb6.find({"name":"tedy"})
+		{ "_id" : ObjectId("594b8dfea4f70bbe7d6558e0"), "addr" : [ ], "name" : "tedy", "sex" : "male" }
+
+	10、$rename
+		示例：将addr字段改名为“地址”
+		> db.tb6.update({"name":"tedy"},{$rename:{"addr":"地址"}})
+		> db.tb6.find({"name":"tedy"})
+		{ "地址" : [ ], "_id" : ObjectId("594b8dfea4f70bbe7d6558e0"), "name" : "tedy", "sex" : "male" }
+
+		
 	
